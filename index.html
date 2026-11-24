@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Symphony Change Readiness Navigator</title>
+<style>
+:root{--n:#03132F;--t:#007E98;--p:#EAF4F7;--g:#aab4bf;--tx:#1b2a41;--b:#cfdde3}
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:#fff}
+header{border-bottom:2px solid var(--t);padding:14px 20px}header img{height:56px;max-width:100%}
+main{max-width:820px;margin:0 auto;padding:24px 20px 60px}
+h1,h2,h3{color:var(--n);line-height:1.25}h1{font-size:28px}h2{font-size:21px;margin-top:34px;border-bottom:1px solid var(--b);padding-bottom:6px}h3{font-size:16px;margin:16px 0 4px}
+.sm{font-size:14px;color:#51607a}.bar{height:8px;background:var(--p);border-radius:4px;margin:6px 0 18px}.bar i{display:block;height:100%;background:var(--t);border-radius:4px}
+.opts{display:grid;gap:8px;margin:18px 0}
+button,select{font:inherit}
+.opt{text-align:left;padding:11px 14px;border:1.5px solid var(--b);background:#fff;border-radius:8px;cursor:pointer;color:var(--tx)}
+.opt:hover,.opt.on{border-color:var(--t);background:var(--p)}
+.opt b{color:var(--t)}
+.btn{background:var(--t);color:#fff;border:0;border-radius:8px;padding:12px 20px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-block}
+.btn.alt{background:#fff;color:var(--n);border:1.5px solid var(--n)}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--n);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+label{display:block;margin:12px 0 4px;font-weight:600;color:var(--n)}select{width:100%;padding:10px;border:1.5px solid var(--b);border-radius:8px;background:#fff}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}th,td{border:1px solid var(--b);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--p);color:var(--n)}
+.bl{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;font-size:13px;margin:4px 0}
+.tr{height:14px;background:#f0f3f5;border-radius:3px;margin:2px 0;position:relative}.tr i{display:block;height:100%;border-radius:3px}
+.tr span{position:absolute;left:6px;top:-2px;font-size:11px;color:#000}
+.hi{color:#a11d1d;font-weight:700}.me{color:#8a5a00;font-weight:700}.pl{color:#1d5f8a;font-weight:700}
+.box{background:var(--p);border-left:4px solid var(--t);padding:10px 14px;border-radius:4px;margin:12px 0}
+@media print{.np{display:none!important}main{padding:0}.pr{display:block!important}h2{break-after:avoid}table,.box{break-inside:avoid}}
+.pr{display:block}
+</style></head><body>
+<header><img src="logo.png" alt="Symphony Change Management Solutions Ltd" onerror="this.outerHTML='<b style=&quot;color:#03132F;font-size:20px&quot;>Symphony Change Management Solutions Ltd</b>'"></header>
+<main id="app"></main>
+<script>
+const AREAS=['Leadership and alignment','People and capacity','Communication and engagement','Adoption and sustainment'];
+const Q=[
+['Can leaders explain why the change is necessary and what success looks like?','Consider whether leaders can clearly explain why the change is needed, its intended benefits and what success looks like in practice.','Leaders explain the case for change and success'],
+['Do sponsors visibly reinforce the change through their decisions and behaviours?','Consider whether sponsors demonstrate commitment, make supportive decisions and lead by example.','Sponsors visibly reinforce the change'],
+['Is ownership of business outcomes and adoption clear beyond go-live?','Consider whether named individuals are accountable for benefits, adoption and sustained ways of working after implementation.','Clear ownership beyond go-live'],
+['Do you understand how day-to-day work will change for each impacted group?','Consider whether affected groups and changes to their responsibilities, processes and everyday activities have been identified.','Impacts understood for each group'],
+['Do managers have the capacity and support to help their teams through the change?','Consider whether managers have the time, resources, guidance and confidence to support teams alongside existing responsibilities.','Manager capacity and support'],
+['Do you understand what other changes are landing on the same people at the same time?','Consider whether competing initiatives, priorities and workloads are understood and their cumulative impact is managed.','Overlapping change understood'],
+['Do people understand what is changing, why it matters and what it means for them?','Consider evidence of employee understanding, rather than simply whether communications have been delivered.','Employee understanding'],
+['Can employees raise concerns and influence how the change is implemented?','Consider whether employees can ask questions, share feedback and influence decisions, and whether their views are considered.','Employee voice and influence'],
+['Can people managers confidently explain the change to their teams?','Consider whether managers have the information and understanding to explain the change, answer questions and address concerns.','Manager confidence in explaining'],
+['Can people practise the new ways of working before they are expected to use them?','Consider whether realistic practice opportunities are available or planned to build capability before implementation.','Practice before go-live'],
+['Is support available at the point of need after launch?','Consider whether employees can access timely practical guidance and knowledgeable support when needed, or whether this is planned.','Point-of-need support'],
+['Are you measuring actual behaviour and business outcomes?','Consider whether adoption behaviours and business benefits are measured or have defined measures, rather than relying solely on milestones or attendance.','Behaviour and outcome measurement']];
+const STAGES={D:'Planning / Discovery',P:'Design / Preparation',I:'Implementation / Rollout',S:'Post-launch / Sustainment'};
+const REF={D:[2,2,2,1,1,2,1,1,1,0,0,1],P:[3,3,3,2,2,2,2,2,2,2,2,2],I:[3,3,3,3,3,3,3,3,3,3,3,2],S:Array(12).fill(3)};
+const OPTS=[[0,'Absent / no evidence'],[1,'Partial / inconsistent'],[2,'Mostly in place, with gaps'],[3,'Consistent / evidenced'],['ns','Not sure'],['na','Not applicable'],['skip','Skip']];
+const CRIT=[1,2,4,7,9,10,11];
+const CONS=['Decision delays, weak accountability and unrealised benefits','Overload, disruption and rework','Confusion, workarounds and poor feedback','Errors, productivity loss, support demand and regression'];
+const CATQ=['v','v','b','i','c','c','i','i','i','p','p','o'];
+const CATS={
+b:{n:'Business accountability',o:'Sponsor / process owner',d:'Name business owners for outcomes and adoption beyond go-live',e:'Named benefit owners and review cadence',wk:0,
+ p:['Who will answer for benefits and adoption six months after go-live?','Named owners attend scheduled benefit reviews','Benefits tracked against agreed baselines']},
+v:{n:'Visible sponsorship',o:'Executive sponsor',d:'Agree a sponsor action plan with specific visible decisions',e:'Decision log and observed sponsor actions',wk:0,
+ p:['Which decisions this month show we are backing the change?','Sponsor actions logged and observed','Decisions made within agreed timescales']},
+i:{n:'Impact and involvement',o:'Change lead / managers',d:'Validate role-by-role impacts and close the employee feedback loop',e:'Validated role impacts and closed feedback loop',wk:1,
+ p:['Which groups have we validated impacts with, and what changed as a result?','Feedback items raised and closed; groups consulted','Less rework in design and rollout']},
+c:{n:'Capacity and sequencing',o:'Portfolio lead / managers',d:'Review concurrent change load and agree priorities and sequencing',e:'Capacity plan and agreed priorities',wk:1,
+ p:['What else lands on these people at the same time, and what will we defer?','Manager time protected for the change','Workload and change-fatigue indicators stable']},
+p:{n:'Practice and support',o:'Learning lead / process SMEs',d:'Plan realistic role-based practice and point-of-need support',e:'Tested scenarios and support routes',wk:2,
+ p:['Where can people rehearse real scenarios before they must use them, and who helps afterwards?','Practice sessions completed by role','Fewer launch errors and support requests']},
+o:{n:'Behaviour and outcomes',o:'Business owner / analytics lead',d:'Define behaviour and outcome measures with baselines and targets',e:'Baselines, targets and review schedule',wk:3,
+ p:['Which behaviours and outcomes will show the change is working, and who reviews them?','Adoption behaviour rates reviewed regularly','Benefit measures against baseline']}};
+// rules: id, conditions, pattern, consequence, intervention, positive?
+const RULES=[
+['1>=2,2<=1','Intent–action gap','Delayed decisions','Sponsor action plan'],
+['1>=2,3<=1','Direction without ownership','Benefits drift','Name business owners'],
+['5<=1,6<=1','Capacity and saturation risk','Overload','Portfolio capacity review'],
+['7>=2,8<=1','Information without influence','Workarounds','Build a feedback loop'],
+['9>=2,7<=1','Manager–employee understanding gap','Inconsistent messages','Test employee understanding'],
+['10<=1,11<=1','Enablement gap','Errors at launch','Practice and support plan'],
+['12>=2,10<=1','Measurement ahead of enablement','Targets without capability','Role-based practice'],
+['3<=1,11<=1','Sustainment ownership gap','Unresolved issues','Operational handover'],
+['4<=1,8<=1','Design disconnect','Rework','Co-design workshops'],
+['3<=1,12<=1','Benefits accountability gap','Unclear value','Owners and baselines'],
+['2<=1,5<=1','Weak leadership support chain','Manager overload','Sponsor resource decisions'],
+['4<=1,10>=2','Practice may lack role fit','Misaligned learning','Validate scenarios'],
+['6<=1,10>=2','Practice capacity untested','Low participation','Sequence learning'],
+['8>=2,7<=1','Feedback ahead of clarity','Confusion','Close the feedback loop'],
+['9<=1,5>=2','Capacity without communication confidence','Inconsistent briefings','Manager briefing'],
+['10>=2,11<=1','Pre-launch / post-launch gap','Regression','Point-of-need support'],
+['3>=2,12<=1','Ownership without measures','Unverified benefits','Define KPIs'],
+['12>=2,3<=1','Measurement without ownership','No intervention owner','Assign KPI owners'],
+['1>=2,2>=2,3>=2','Leadership foundation',0,'Maintain sponsor cadence'],
+['4>=2,8>=2','Employee-informed design',0,'Continue co-design'],
+['5>=2,6>=2','Capacity awareness',0,'Protect manager time'],
+['7>=2,9>=2','Communication alignment',0,'Validate understanding'],
+['10>=2,11>=2','Adoption support foundation',0,'Test the support model'],
+['3>=2,12>=2','Outcome accountability',0,'Review benefits regularly']
+].map(r=>({c:r[0].split(',').map(x=>{const m=x.match(/(\d+)(>=|<=)(\d+)/);return[+m[1]-1,m[2],+m[3]]}),pat:r[1],con:r[2],act:r[3],pos:!r[2]}));
+const S={ctx:{role:'',type:'',stage:''},a:Array(12).fill(null),v:'intro',i:0};
+const num=v=>typeof v==='number',rnd=x=>Math.floor(x+.5),$=id=>document.getElementById(id);
+const mat=p=>p<=20?'Reactive':p<=40?'Developing':p<=60?'Established':p<=80?'Proactive':'Embedded';
+const sg=x=>(x>0?'+':x<0?'−':'')+Math.abs(x);
+const qr=l=>l.map(i=>'Q'+(i+1)).join(', ');
+const R=()=>REF[S.ctx.stage]||null;
+function urg(i){const s=S.a[i],r=R()?R()[i]:null;if(!num(s))return[0,''];const cr=CRIT.includes(i),d=r!=null?Math.max(0,r-s):0;
+ if(s===0&&r===0)return[1,'Planning priority'];
+ if(cr&&s===0&&(r==null||r>0))return[3,r==null?'High (stage unknown, flag for review)':S.ctx.stage==='I'?'High (immediate governance review)':'High'];
+ if(cr&&d>=2)return[3,'High'];
+ if(d>0||(cr&&s===0))return[2,'Medium'];return[0,'']}
+const uc=u=>u.startsWith('High')?'hi':u==='Medium'?'me':'pl';
+function wq(i){const s=S.a[i];if(!num(s))return 0;const r=R()?R()[i]:null,d=r!=null?Math.max(0,r-s):0;return(3-s)+2*d+(CRIT.includes(i)&&s===0?3:0)}
+function calc(){
+ const a=S.a,n=a.filter(num).length,sc=a.reduce((t,v)=>t+(num(v)?v:0),0),rf=R();
+ const ar=AREAS.map((nm,k)=>{const idx=[0,1,2].map(j=>k*3+j),nv=idx.filter(i=>num(a[i])),s=nv.reduce((t,i)=>t+a[i],0),rs=rf?nv.reduce((t,i)=>t+rf[i],0):null;
+  return{nm,idx,n:nv.length,s,max:3*nv.length,pct:nv.length?100*s/(3*nv.length):null,full:nv.length===3,rs,rp:rf&&nv.length?100*rs/(3*nv.length):null,def:rf?nv.reduce((t,i)=>t+Math.max(0,rf[i]-a[i]),0):null}});
+ const cnt=k=>a.filter(v=>v===k).length,unans=a.filter(v=>v===null).length;
+ const rs=rf?a.reduce((t,v,i)=>t+(num(v)?rf[i]:0),0):null;
+ const def=rf?a.reduce((t,v,i)=>t+(num(v)?Math.max(0,rf[i]-v):0),0):null;
+ const ok=ar.reduce((t,x)=>t+x.s,0)===sc&&ar.reduce((t,x)=>t+x.max,0)===3*n;
+ const el=ar.filter(x=>x.n>=2).sort((x,y)=>y.pct-x.pct),hi=el.length?el.filter(x=>x.pct===el[0].pct):[],lo=el.length?el.filter(x=>x.pct===el[el.length-1].pct):[];
+ const spread=el.length>1?el[0].pct-el[el.length-1].pct:null;
+ // rules
+ const hit=RULES.filter(r=>r.c.every(([q,o,v])=>num(a[q])&&(o==='>='?a[q]>=v:a[q]<=v)));
+ const pri=r=>r.pos?r.c.reduce((t,[q])=>t+a[q],0)/10:r.c.reduce((t,[q])=>t+wq(q),0);
+ const neg=hit.filter(r=>!r.pos).sort((x,y)=>pri(y)-pri(x)),pos=hit.filter(r=>r.pos).sort((x,y)=>pri(y)-pri(x));
+ const nN=Math.min(neg.length,pos.length?4:6),nP=Math.min(pos.length,6-nN);
+ const ins=neg.slice(0,nN).concat(pos.slice(0,nP)),more=neg.length-nN;
+ // profiles
+ const ls=a.slice(0,3),pf=[];const g=i=>a[i];
+ if(n>=9){const t=(c,k)=>c&&pf.push(k);
+  t(num(g(0))&&num(g(2))&&num(g(9))&&g(0)>=2&&g(2)<=1&&g(9)<=1,'Delivery-oriented');
+  t(ls.every(num)&&ls[0]+ls[1]+ls[2]>=7&&num(g(7))&&g(7)<=1,'Leadership-led');
+  t(num(g(6))&&num(g(8))&&num(g(9))&&g(6)>=2&&g(8)>=2&&g(9)<=1,'Communication-led');
+  t(num(g(3))&&num(g(7))&&num(g(4))&&g(3)>=2&&g(7)>=2&&g(4)>=2,'People-centred');
+  t(num(g(11))&&num(g(9))&&g(11)>=2&&g(9)<=1,'Measurement-led');
+  t(num(g(9))&&num(g(10))&&num(g(11))&&g(9)>=2&&g(10)>=2&&g(11)>=2,'Adoption-led');
+  t(n===12&&ar.every(x=>x.s>=6)&&Math.max(...ar.map(x=>x.s))-Math.min(...ar.map(x=>x.s))<=1,'Balanced')}
+ // risks
+ const pool=[];
+ neg.forEach(r=>{const qs=r.c.map(c=>c[0]),u=qs.map(urg).sort((x,y)=>y[0]-x[0])[0];pool.push({t:r.pat,qs,u,c:r.con,m:r.act,pri:u[0]*10+pri(r)})});
+ CRIT.forEach(i=>{const u=urg(i);if(num(a[i])&&a[i]===0&&u[0]>0)pool.push({t:'No evidence: '+Q[i][2].toLowerCase(),qs:[i],u,c:CONS[Math.floor(i/3)],m:CATS[CATQ[i]].n,pri:u[0]*10+wq(i)})});
+ pool.sort((x,y)=>y.pri-x.pri);const risks=[];
+ pool.forEach(p=>{if(risks.length<3&&!risks.some(r=>p.qs.every(q=>r.qs.includes(q))))risks.push(p)});
+ // interventions
+ const cw=Object.keys(CATS).map(k=>({k,w:a.reduce((t,v,i)=>t+(CATQ[i]===k?wq(i):0),0)})).sort((x,y)=>y.w-x.w);
+ let iv=cw.filter(x=>x.w>0).slice(0,5).map(x=>({...CATS[x.k],k:x.k,m:0}));
+ const un=a.map((v,i)=>num(v)?-1:i).filter(i=>i>=0);
+ if(iv.length<5&&un.length)iv.push({n:'Evidence gathering',o:'Change lead',d:'Gather evidence on '+qr(un)+' (not yet scored)',e:'Scores agreed for each question',wk:0,m:1});
+ cw.forEach(x=>{if(iv.length<5&&n>0&&!iv.some(y=>y.k===x.k))iv.push({...CATS[x.k],k:x.k,m:2})});
+ // scenario
+ const cand=a.map((v,i)=>({i,s:v,d:rf&&num(v)?Math.max(0,rf[i]-v):0})).filter(x=>num(x.s)&&x.s<3).sort((x,y)=>y.d-x.d||x.s-y.s||x.i-y.i).slice(0,5)
+  .map(x=>{let t=Math.min(3,Math.max(x.s+1,rf?rf[x.i]:0));if(rf&&CRIT.includes(x.i)&&x.s===0&&x.d>0)t=Math.min(3,Math.max(t,2));return{i:x.i,from:x.s,to:t}});
+ const gain=cand.reduce((t,x)=>t+x.to-x.from,0);
+ return{a,n,sc,pct:n?100*sc/(3*n):null,ar,rs,def,ok,hi,lo,spread,ins,more,pf,risks,iv,cand,gain,cnt,unans,rf,cw,
+  ms:n?100*(sc+gain)/(3*n):null}}
+function head(){return`<div class="sm">${S.v==='q'?'':''}</div>`}
+function render(){const m=$('app');window.scrollTo(0,0);
+ if(S.v==='intro')m.innerHTML=`<h1>Symphony Change Readiness Navigator</h1>
+ <p>Welcome. This guided assessment takes about ten minutes and gives you a free report: where your change stands, how that compares with a typical stage reference, what the answers suggest, and a practical 30-day plan.</p>
+ <div class="box">Please avoid entering confidential or personal data. Your answers stay in this browser and are not sent to Symphony or anyone else.</div>
+ <p class="sm">Optional context. You can skip any of these.</p>
+ <label for="role">Your role</label><select id="role"><option value="">Prefer not to say</option>${['Executive sponsor / senior leader','Change / transformation professional','Programme / project manager','People manager','Team member','Other'].map(x=>`<option>${x}</option>`).join('')}</select>
+ <label for="type">Type of change</label><select id="type"><option value="">Prefer not to say</option>${['Technology / systems','Process / ways of working','Organisational restructure','Culture / behaviour','Other'].map(x=>`<option>${x}</option>`).join('')}</select>
+ <label for="stage">Where is the change now?</label><select id="stage"><option value="">Prefer not to say (no stage comparison)</option>${Object.entries(STAGES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+ <div class="row"><button class="btn" onclick="start()">Start the assessment</button></div>`;
+ else if(S.v==='q'){const i=S.i,k=Math.floor(i/3),cur=S.a[i],an=S.a.filter(v=>v!==null).length;
+  m.innerHTML=`<div class="sm">${AREAS[k]} · Question ${i+1} of 12</div><div class="bar"><i style="width:${i/12*100}%"></i></div>
+  <h2 style="border:0;margin-top:0">${Q[i][0]}</h2><p>${Q[i][1]}</p><p class="sm">Judge current evidence. A plan is not the same as practice in place.</p>
+  <div class="opts">${OPTS.map(([v,l])=>`<button class="opt ${cur===v?'on':''}" onclick="ans('${v}')">${num(v)?`<b>${v}</b> – `:''}${l}</button>`).join('')}</div>
+  <div class="row">${i?'<button class="btn alt" onclick="S.i--;render()">Back</button>':''}${an?'<button class="btn alt" onclick="S.v=\'r\';render()">Stop here and see a partial report</button>':''}</div>`}
+ else if(S.v==='edit')m.innerHTML=`<h1>Edit your answers</h1><p class="sm">Changing any answer regenerates the whole report.</p>
+  <label for="es">Stage</label><select id="es">${['',...Object.keys(STAGES)].map(k=>`<option value="${k}" ${S.ctx.stage===k?'selected':''}>${k?STAGES[k]:'Not stated'}</option>`).join('')}</select>
+  ${Q.map((q,i)=>`<label for="e${i}">Q${i+1}. ${q[2]}</label><select id="e${i}">${[['','Unanswered'],...OPTS.map(([v,l])=>[v,(num(v)?v+' – ':'')+l])].map(([v,l])=>`<option value="${v}" ${(S.a[i]===null?'':S.a[i])===v||String(S.a[i])===String(v)&&v!==''?'selected':''}>${l}</option>`).join('')}</select>`).join('')}
+  <div class="row"><button class="btn" onclick="saveEdit()">Regenerate report</button></div>`;
+ else report(m)}
+function start(){S.ctx={role:$('role').value,type:$('type').value,stage:$('stage').value};S.a=Array(12).fill(null);S.i=0;S.v='q';render()}
+function ans(v){S.a[S.i]=v==='ns'||v==='na'||v==='skip'?v:+v;if(S.i<11){S.i++}else S.v='r';render()}
+function saveEdit(){S.ctx.stage=$('es').value;S.a=Q.map((_,i)=>{const v=$('e'+i).value;return v===''?null:/^\d$/.test(v)?+v:v});S.v='r';render()}
+const tb=(h,rows)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+function report(m){const c=calc(),st=S.ctx.stage,sn=STAGES[st],part=c.n<12;
+ const head=`<h1>Symphony Change Readiness Report${part?' (partial)':''}</h1><p class="sm">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}${S.ctx.role?' · '+S.ctx.role:''}${S.ctx.type?' · '+S.ctx.type:''}${sn?' · '+sn:''}</p>`;
+ const acts=`<div class="row np"><button class="btn" onclick="window.print()">Download report (PDF)</button><button class="btn alt" onclick="S.v='edit';render()">Edit answers</button><button class="btn alt" onclick="S.v='intro';render()">Start again</button></div><p class="sm np">To save as PDF, choose “Save as PDF” as the destination in the print window.</p>`;
+ if(!c.n){m.innerHTML=head+`<div class="box">Insufficient information: no questions have a numeric score yet, so there is no score, band, profile or pattern to report.</div>`+acts;return}
+ const un=c.cnt('ns')+c.cnt('na')+c.cnt('skip')+c.unans;
+ let h=head;
+ const topA=c.hi[0],lowA=c.lo[0];
+ const bench=c.rf?(c.n<9?`Fewer than nine questions are scored, so no overall stage conclusion is drawn; comparisons are provisional.`:`Against the ${sn} reference you are ${c.sc-c.rs>=0?c.sc-c.rs+' point(s) at or above':Math.abs(c.sc-c.rs)+' point(s) below'} on the matched questions, but individual deficits total ${c.def} point(s), so surpluses should not hide gaps.`):'No stage was selected, so no stage comparison is shown.';
+ const worst=c.a.map((v,i)=>({i,w:wq(i)})).filter(x=>x.w>0&&num(c.a[x.i])).sort((x,y)=>y.w-x.w)[0];
+ h+=`<h2>Executive summary</h2><p><b>Current readiness:</b> ${c.sc}/${3*c.n} (${rnd(c.pct)}%) across ${c.n} of 12 scored questions${c.n===12?`. Band: ${c.sc<=12?'Significant gaps':c.sc<=24?'Uneven readiness':'Stronger foundations'}; maturity level: ${mat(c.pct)}.`:'. Because the assessment is partial, no band or maturity level is applied.'}</p>
+ <p><b>Stage comparison:</b> ${bench}</p>
+ <p><b>Strength:</b> ${topA?topA.nm+' ('+rnd(topA.pct)+'%)':'not enough scored areas to compare'}. <b>Hidden gap:</b> ${worst?'Q'+(worst.i+1)+', '+Q[worst.i][2].toLowerCase()+' (scored '+c.a[worst.i]+')':'none identified'}.</p>
+ <p><b>Priority decision:</b> ${c.iv[0]?c.iv[0].d+'.':'Maintain current practice and validate it with evidence.'}</p>`;
+ h+=`<h2>Scorecard</h2>`+tb(['Area','Score','Percentage','Coverage','Maturity (complete areas)'],c.ar.map(x=>[x.nm,x.n?`${x.s}/${x.max}`:'Insufficient information',x.n?rnd(x.pct)+'%':'–',x.n+'/3'+(x.n<2?' (low)':''),x.full?mat(x.pct):'–']).concat([['<b>Overall</b>',`<b>${c.sc}/${3*c.n}</b>`,`<b>${rnd(c.pct)}%</b>`,`${c.n}/12`+(c.n<9?' (low overall coverage)':''),c.n===12?mat(c.pct):'–']]))
+ +`<p class="sm">Unscored: ${c.cnt('ns')} not sure, ${c.cnt('na')} not applicable, ${c.cnt('skip')} skipped, ${c.unans} unanswered. Arithmetic check: area totals and denominators ${c.ok?'reconcile to the overall score':'DO NOT reconcile'}. Original bands apply to complete assessments only; maturity labels are proposed descriptive levels, not validated measures.</p>`;
+ h+=`<h2>Benchmark and balance</h2>`;
+ if(c.rf){h+=`<p class="sm">Proposed Symphony reference for ${sn}${part?' (provisional, scored questions only)':''}. These are reference expectations, not empirical averages or go-live gates.</p>`
+  h+=c.ar.filter(x=>x.n).map(x=>`<div class="bl"><div>${x.nm}</div><div><div class="tr"><i style="width:${x.pct}%;background:var(--t)"></i><span>Actual ${rnd(x.pct)}%</span></div><div class="tr"><i style="width:${x.rp}%;background:var(--g)"></i><span>Reference ${rnd(x.rp)}%</span></div></div></div>`).join('')
+  +tb(['Area','Actual','Reference','Gap (points)','Gap (% points)','Individual deficits'],c.ar.filter(x=>x.n).map(x=>[x.nm,x.s+'/'+x.max,x.rs+'/'+x.max,sg(x.s-x.rs),sg(rnd(100*(x.s-x.rs)/x.max)),x.def]).concat([['<b>Overall</b>',c.sc+'/'+3*c.n,c.rs+'/'+3*c.n,sg(c.sc-c.rs),sg(rnd(100*(c.sc-c.rs)/(3*c.n))),c.def]]));
+  const dl=c.a.map((v,i)=>num(v)&&c.rf[i]>v?`Q${i+1} (−${c.rf[i]-v})`:'').filter(Boolean);h+=`<p>Question deficits: ${dl.join(', ')||'none'}.${st==='D'?' Q10 and Q11 zeros at this stage are a planning priority rather than an operational failure.':''}</p>`}
+ else h+=`<p>No stage selected, so no benchmark is shown.</p>`;
+ h+=c.spread!=null?`<p><b>Strongest:</b> ${c.hi.map(x=>x.nm).join(' and ')}. <b>Weakest:</b> ${c.lo.map(x=>x.nm).join(' and ')}. <b>Spread:</b> ${rnd(c.spread)} percentage points.${c.ar.some(x=>x.n!==c.ar[0].n)?' Coverage differs between areas, so read with care.':''} A balanced low score is not a healthy one.</p>`:'<p>Not enough areas with at least two scored questions to assess balance.</p>';
+ h+=`<h2>Diagnostic insights and profile</h2><p class="sm">These are hypotheses based on self-reported answers, not confirmed events.</p>`;
+ h+=c.ins.length?tb(['Pattern','Type','Questions','Potential consequence','Suggested action'],c.ins.map(r=>[r.pat,r.pos?'<span class="pl">Strength</span>':'Gap',qr(r.c.map(x=>x[0])),r.con||'Reported foundation, not proven performance',r.act])):'<p>No defined pattern was detected. That does not mean risks are absent.</p>';
+ if(c.more>0)h+=`<p class="sm">${c.more} further lower-priority pattern(s) also matched.</p>`;
+ h+=`<p><b>Profile:</b> ${c.n<9?'Mixed or insufficient evidence (at least nine scored answers are needed).':c.pf.length&&c.pf.length<=2?c.pf.join(' and ')+' (non-exclusive hypothesis)':'Mixed or insufficient evidence'}.</p>`;
+ h+=`<h2>Critical indicators and risks</h2>`+(c.risks.length?tb(['Risk','Questions','Urgency','Potential consequence','Mitigation'],c.risks.map(r=>[r.t,qr(r.qs),`<span class="${uc(r.u[1])}">${r.u[1]}</span>`,'Could lead to: '+r.c.toLowerCase()+(S.ctx.type?' (in the context of a '+S.ctx.type.toLowerCase()+' change)':''),r.m])):'<p>No critical zeros or stage deficits were supported by the answers, so no risks are listed.</p>')+`<p class="sm">A zero means absent or no evidence, not a verified failure. There is no automatic go/no-go decision.</p>`;
+ h+=`<h2>Interventions</h2>`+tb(['Action','Owner','Deliverable','Timing','Evidence check'],c.iv.map(x=>[x.n+(x.m===2?' (maintain and validate)':''),x.o,x.d,['Days 1–7','Days 8–14','Days 15–21','Days 22–30'][x.wk],x.e]));
+ h+=`<h2>Improvement scenario</h2>`+(c.cand.length?tb(['Question','Current','Modelled','Evidence condition'],c.cand.map(x=>['Q'+(x.i+1)+' '+Q[x.i][2],x.from,x.to,CATS[CATQ[x.i]].e]))+`<p>Current ${c.sc}/${3*c.n} (${rnd(c.pct)}%); modelled ${c.sc+c.gain}/${3*c.n} (${rnd(c.ms)}%), a change of +${rnd(c.ms-c.pct)} percentage points (+${c.gain} points). This is an illustration of what evidenced improvement could look like, not a forecast or guaranteed result. Unscored questions stay unscored.</p>`:'<p>No scored question is below 3, so there is no improvement to model. Focus on maintaining and validating current practice.</p>');
+ const pl=['Agree owners and immediate decisions','Validate impacts and employee feedback','Design or test enablement and support','Review evidence, measures and outstanding risks'],po=['Sponsor / change lead','Change lead / managers','Learning lead / process SMEs','Business owner / analytics lead'],px=['Owners and decisions recorded','Impacts validated; feedback loop closed','Scenarios tested; support routes agreed','Evidence reviewed; measures and risks agreed'];
+ if(st==='I')pl[0]='Contain operational risk and agree owners for unresolved critical gaps';if(st==='S')pl[3]='Review regression risk and benefit realisation';
+ h+=`<h2>30-day plan</h2>`+tb(['Timebox','Focus','Owner','Exit check'],pl.map((x,k)=>{const f=c.iv.filter(y=>y.wk===k).map(y=>y.n);return[['Days 1–7','Days 8–14','Days 15–21','Days 22–30'][k],x+(f.length?'. Actions: '+f.join(', '):''),po[k],px[k]]}));
+ h+=`<h2>Leadership prompts</h2>`+tb(['Question','Behaviour measure','Business outcome measure'],c.cw.slice(0,3).map(x=>CATS[x.k].p));
+ h+=`<h2>Limitations and next step</h2><p>This report is self-reported and indicative. It is not an audit, certification or prediction of programme success. Stage references are proposed by Symphony for pilot use and are not empirical peer data. Nothing here was transmitted to Symphony.</p>
+ <div class="box np"><b>Talk it through with an expert.</b><br>Book an optional, complimentary 30-minute discovery call with Jody Randall. No contact details were required to get this report.<div class="row"><a class="btn" href="https://calendly.com/jody-randall-1/30min" target="_blank" rel="noopener">Book a discovery call</a></div></div>
+ <p class="pr" style="display:none">Book a discovery call: https://calendly.com/jody-randall-1/30min</p>`;
+ m.innerHTML=h+acts}
+render();
+</script></body></html>
